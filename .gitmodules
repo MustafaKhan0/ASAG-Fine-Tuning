@@ -1,0 +1,3 @@
+[submodule "datasets/semeval-2013-task7"]
+	path = datasets/semeval-2013-task7
+	url = https://github.com/myrosia/semeval-2013-task7
