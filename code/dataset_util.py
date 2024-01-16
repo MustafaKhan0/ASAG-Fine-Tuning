@@ -150,7 +150,6 @@ def custom_prompt(df : pd.DataFrame, ways : int, dataset : str, student_counts :
     #student_A_count = len(student_A_ans) if student_A_count == -1 else student_A_count + 1 
     if student_A_count == -1:
         student_A_count = len(student_A_ans)
-        print(student_A_count)
     if student_B_count == -1:
         student_B_count = len(student_B_ans)
     if student_C_count == -1:

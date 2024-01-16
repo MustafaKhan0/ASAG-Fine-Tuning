@@ -71,27 +71,35 @@ class DataSet():
 
     
     async def single_prompt(self, client : openai.AsyncOpenAI, messages, model, prompt_style : str, question_id):
+        mask_check = lambda x : x in messages[1]['content']
+        mask = self.prompts['answer_id'].apply(mask_check)
+        mask2 = self.prompts['question_id'] == question_id
+
+
+
         completion = await client.chat.completions.create(messages=messages, model=model)
         # await asyncio.sleep(randint(6,10))
         # completion = {'hehe' : 'lol get faked'}
-        mask = self.prompts['question_id'] == question_id
+        
         self.prompts.loc[mask,f'{prompt_style}_{model}_completion'] = [completion for _ in range(self.prompts.loc[mask].shape[0])]
         
 
     async def run_prompts(self, client : openai.AsyncOpenAI, model : str, prompt_style : str, rate_limit : int):
         tasks = []
         tokens_used = 0
-        for q_id in self.prompts['question_id'].drop_duplicates().to_list():
+        for i, q_id in enumerate(self.prompts['question_id'].drop_duplicates().to_list()):
             msgs = self.prompts.loc[self.prompts['question_id'] == q_id][f'{prompt_style}_prompt'].iloc[0]['messages']
             msg_token = len(self.encoding.encode(msgs[0]['content'])) + len(self.encoding.encode(msgs[1]['content']))
             msg_token = msg_token * 1.13
-            if msg_token + tokens_used >= rate_limit:
+            if msg_token + tokens_used + 3000 >= rate_limit:
                 print('Rate limit reached, sleeping for a bit :)')
                 await asyncio.sleep(70)
                 print('Up and awake')
                 tokens_used = 0
-            tokens_used += msg_token
+            tokens_used += msg_token + 3000
             tasks.append(asyncio.create_task(self.single_prompt(client, msgs, model, prompt_style, q_id)))
+            
+            print(f"{i} : {tokens_used}")
         for task in tasks:
             await task
             
@@ -112,13 +120,25 @@ class DataSet():
     def process_responses(self, model : str, prompt_style : str):
         main_df = pd.DataFrame()
         for i, resp in enumerate(self.prompts[f'{prompt_style}_{model}_completion'].drop_duplicates().to_list()):
-            if model == 'ft:gpt-3.5-turbo-1106:personal::8WHxYRBn':
-                df = pd.DataFrame(data = [li.split(':') for li in resp.choices[0].message.content.replace('\"', '').split(',')], columns = ['answer_id', f'{prompt_style}_{model}_answer'])
+            msg = resp.choices[0].message.content
+            if msg.count('\n') > 0 and msg.count(':') > 0:
+                data = [li.split(':') for li in msg.split('\n')]
+            elif msg.count(':') > 0: 
+                data = [li.split(':') for li in msg.replace('\"', '').split(',')]
             else:
-                df = pd.DataFrame(data = [li.split(',') for li in resp.choices[0].message.content.replace('\"', '').split('\n')][1:], columns = ['answer_id', f'{prompt_style}_{model}_answer'])
+                data = [li.split(',') for li in msg.replace('\"', '').split('\n')][1:]
+            
+            try:
+                df = pd.DataFrame(data=data, columns = ['answer_id', f'{prompt_style}_{model}_answer'])
+            except Exception as e:
+                print(f'{i} : {resp}')
+                raise e
+                
+
             df[f'{prompt_style}_{model}_answer'] = df[f'{prompt_style}_{model}_answer'].apply(lambda x : x.strip().lower() if x else x)
             df['answer_id'] = df['answer_id'].apply(lambda x : x.strip() if x else x)
             df[f'{prompt_style}_{model}_answer'] =  df[f'{prompt_style}_{model}_answer'].apply(lambda x : 'incorrect' if x == 'incorr' else x).astype('category')
+            
             main_df = pd.concat([main_df, df])
 
         self.prompts = self.prompts.merge(main_df, on='answer_id', how='left')
@@ -139,8 +159,7 @@ class DataSet():
         ground_true = self.prompts['accuracy'].to_numpy(dtype=str, copy=True)
         model_prediction = self.prompts[f'{prompt_style}_{model}_answer'].to_numpy(dtype=str, copy=True)
 
-        precision, recall, f1score, _ = precision_recall_fscore_support(ground_true, model_prediction, labels=['correct'], average='macro')
-
+        precision, recall, f1score, support = precision_recall_fscore_support(ground_true, model_prediction, average='weighted')
         return f1score
 
     
