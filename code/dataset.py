@@ -161,5 +161,3 @@ class DataSet():
 
         precision, recall, f1score, support = precision_recall_fscore_support(ground_true, model_prediction, average='weighted')
         return f1score
-
-    

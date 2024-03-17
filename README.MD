@@ -15,6 +15,7 @@ The main part of the code is in code/prompting.ipynb. It contains all of the pro
 
 The SemEval 2013 Task 7 dataset was used. This is the link from which it was obtained, along with the appropriate citations. This dataset is available under the Creative Commons Attribution-Share Alike License (CC-BY-SA) 3.0. 
 
+
 https://github.com/myrosia/semeval-2013-task7 
 
 Dzikovska, M.O., Nielsen, R., Brew, C., Leacock, C., Giampiccolo, D., Bentivogli, L., Clark, P., Dagan, I. and Dang, H.T. (2013) "SemEval-2013 Task 7: The Joint Student Response Analysis and 8th Recognizing Textual Entailment Challenge". In Proceedings of the 7th International Workshop on Semantic Evaluation (SemEval 2013), in conjunction with the Second Joint Conference on Lexical and Computational Semantcis (*SEM 2013). Association for Computational Linguistics. Atlanta, Georgia, USA. 13-14 June https://aclanthology.org/S13-2045/
@@ -23,4 +24,8 @@ Dzikovska, Myroslava & Nielsen, Rodney & Leacock, Claudia. (2015). The joint stu
 
 ## License
 
-The code, graphs, and other original work are liscensed under the [Creative Commons Attribution-Share Alike License (CC-BY-SA) 3.0](https://creativecommons.org/licenses/by-sa/3.0/deed.en).
+The code, graphs, and other original work are liscensed under the [Creative Commons Attribution-Share Alike License (CC-BY-SA) 3.0]
+
+Any code, or figures, or processed data that references the original dataset is attributed to that dataset. In addition, it follows the same License as the dataset itself, the CC-BY-SA 3.0. 
+
+(https://creativecommons.org/licenses/by-sa/3.0/deed.en).
